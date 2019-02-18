@@ -114,25 +114,93 @@
         <article class="article content gallery" itemscope itemprop="blogPost">
     <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
         
-            <a href="/2019/02/18/在Google-Cloud-Platform上搭建梯子/" itemprop="url">在Google-Cloud-Platform上搭建梯子</a>
+            <a href="/2019/02/12/在Google-Cloud-Platform上搭建梯子/" itemprop="url">在Google Cloud Platform上搭建梯子</a>
         
     </h1>
     <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
         <span class="column is-narrow">
-            <time datetime="2019-02-18T08:07:38.000Z" itemprop="datePublished">2月 18 2019</time>
+            <time datetime="2019-02-12T05:38:48.000Z" itemprop="datePublished">2月 12 2019</time>
         </span>
         
         
         <span class="column is-narrow">
             
             
-            几秒 读完 (约 0 字)
+            6 分钟 读完 (约 869 字)
         </span>
         
     </div>
     <div class="article-entry is-size-6-mobile" itemprop="articleBody">
     
-        
+        <h4 id="一、准备工作"><a href="#一、准备工作" class="headerlink" title="一、准备工作"></a><strong>一、准备工作</strong></h4><p>在你打算在Coogle Cloud上搭建一个你自己的一年免费梯子时，下面这些东西是你必须要有的：</p>
+<ol>
+<li>Google帐号，没有的话可以去<a href="https://accounts.google.com/signup/v2/webcreateaccount?continue=https%3A%2F%2Fwww.google.com%2F&amp;hl=en&amp;flowName=GlifWebSignIn&amp;flowEntry=SignUp" target="_blank" rel="noopener">官网</a>注册一个。</li>
+<li>一张双币信用卡（主要用来做认证，不会扣款）。</li>
+</ol>
+<p>如果你有上面的东西，那就可以继续下一步，在<a href="https://cloud.google.com/" target="_blank" rel="noopener">Google Cloud Platform</a>上去免费试用了，在这个过程你还需要填写一些个人信息。</p>
+<h4 id="二、创建一个新的项目"><a href="#二、创建一个新的项目" class="headerlink" title="二、创建一个新的项目"></a>二、创建一个新的项目</h4><ul>
+<li>创建一个名为Personal VPN项目<br><img src="https://i.loli.net/2019/02/12/5c6265d5c01e5.png" alt="创建项目"></li>
+<li>选择刚刚创建的项目<br><img src="https://i.loli.net/2019/02/12/5c6267192e06a.png" alt></li>
+</ul>
+<h4 id="三、创建一个VM实例"><a href="#三、创建一个VM实例" class="headerlink" title="三、创建一个VM实例"></a>三、创建一个VM实例</h4><ol>
+<li>在左侧的Compute Engine菜单下选择VM实例<br><img src="https://i.loli.net/2019/02/12/5c6268eab02f8.png" alt></li>
+<li><p>点击创建实例按钮创建一个新的实例</p>
+<ul>
+<li>名称：随意填一个</li>
+<li>区域：推荐选择亚洲的台湾和香港，可以在这个<a href="http://www.gcping.com/" target="_blank" rel="noopener">网站</a>上看下你所在城市选择那个区域的延迟较低</li>
+<li>机器类型：小型（推荐）/ 微型</li>
+<li>启动磁盘：我这里选择的是Ubuntu 16.04LTS（CentOS系统需要自己安装wget命令）</li>
+<li>防火墙：允许HTTP流量 允许HTTPS流量</li>
+<li>网络：<ul>
+<li>点击网络选项卡 —&gt; 外部IP —&gt; 创建IP地址<br><img src="https://i.loli.net/2019/02/12/5c627294a438a.png" alt></li>
+<li>IP地址中只能有小写字母和数字<br><img src="https://i.loli.net/2019/02/12/5c627390780bc.png" alt></li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<h5 id="四、配置VPC网络"><a href="#四、配置VPC网络" class="headerlink" title="四、配置VPC网络"></a>四、配置VPC网络</h5><ol>
+<li>在左侧的VPC网络菜单下选择防火墙规则</li>
+<li>点击创建防火墙规则<ul>
+<li>名称：随便填一个</li>
+<li>流量方向：入站</li>
+<li>来源IP地址范围：0.0.0.0/0</li>
+<li>协议和端口：全部允许</li>
+</ul>
+</li>
+<li>同步骤2再创建一个出站的防火墙规则</li>
+</ol>
+<h5 id="五、配置VM实例的BBR和SS"><a href="#五、配置VM实例的BBR和SS" class="headerlink" title="五、配置VM实例的BBR和SS"></a>五、配置VM实例的BBR和SS</h5><ol>
+<li>进入实例控制台 – 点击SSH – 在浏览器窗口中打开<br><img src="https://i.loli.net/2019/02/12/5c627981ddbe0.png" alt></li>
+<li><p>切换到root用户</p>
+<pre><code>sudo su
+</code></pre></li>
+<li><p>安装BBR</p>
+<pre><code>wget --no-check-certificate https://github.com/teddysun/across/raw/master/bbr.sh &amp;&amp; chmod +x bbr.sh &amp;&amp; ./bbr.sh
+</code></pre></li>
+<li><p>配置BBR，依次执行以下命令：</p>
+<pre><code>sysctl net.ipv4.tcp_available_congestion_control（返回值一般为：net.ipv4.tcp_available_congestion_control = bbr cubic reno）
+
+sysctl net.ipv4.tcp_congestion_control（返回值一般为：net.ipv4.tcp_congestion_control = bbr）
+
+sysctl net.core.default_qdisc（返回值一般为：net.core.default_qdisc = fq）
+
+lsmod | grep bbr （返回值有 tcp_bbr 模块即说明bbr已启动。）
+</code></pre></li>
+<li><p>安装SSR</p>
+<pre><code>wget --no-check-certificate -O shadowsocks-all.sh https://raw.githubusercontent.com/teddysun/shadowsocks_install/master/shadowsocks-all.sh chmod +x shadowsocks-all.sh
+
+./shadowsocks-all.sh 2&gt;&amp;1 | tee shadowsocks-all.log
+</code></pre></li>
+</ol>
+<p>成功后会有如下提示：</p>
+<p><img src="https://i.loli.net/2019/02/12/5c6282001861c.png" alt></p>
+<p>因为已经生成了SSR配置的二维码图片，我们只需要打开扫码就行了。在你的图片目录执行以下命令：</p>
+<pre><code>python  -m  SimpleHTTPServer
+</code></pre><p>然后你就可以在浏览器中用你的IP:8000进行访问</p>
+<p>到此，在Google Cloud Platform上搭建梯子就完成了，可以出去看一下外面的世界了😄，祝您旅行愉快！。</p>
+<h3 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h3><p><a href="https://medium.com/@YasuoYuHao/google-cloud-platform-%E6%90%AD%E5%BB%BA%E5%80%8B%E4%BA%BAvpn-358ccdbeca40" target="_blank" rel="noopener">Google Cloud Platform 搭建個人VPN</a><br><a href="https://suiyuanjian.com/124.html" target="_blank" rel="noopener">使用Google Cloud Platform(GCP GCE)安装SSR+BBR教程</a></p>
+
     
     </div>
     
